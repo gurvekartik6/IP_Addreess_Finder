@@ -12,15 +12,16 @@ public class IPFinder extends JFrame {
     private JButton localIPButton, publicIPButton, websiteButton, clearButton;
     
     public IPFinder() {
-        setTitle("IP Finder - Local & Public IP");
-        setSize(550, 450);
+        setTitle("IP Finder");
+        setSize(550, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        JPanel topPanel = new JPanel(new GridLayout(4, 1, 5, 5));
-        topPanel.setBorder(BorderFactory.createTitledBorder("IP Finder Options"));
+        JPanel topPanel = new JPanel(new GridLayout(4, 1, 10, 10));
+        topPanel.setBorder(BorderFactory.createTitledBorder("Options"));
         
         localIPButton = new JButton("Get Local IP Address");
         publicIPButton = new JButton("Get Public IP Address");
@@ -28,7 +29,7 @@ public class IPFinder extends JFrame {
         JPanel urlPanel = new JPanel(new BorderLayout(5, 5));
         urlField = new JTextField();
         websiteButton = new JButton("Get Website IP");
-        urlPanel.add(new JLabel("Enter Website: "), BorderLayout.WEST);
+        urlPanel.add(new JLabel("Website: "), BorderLayout.WEST);
         urlPanel.add(urlField, BorderLayout.CENTER);
         urlPanel.add(websiteButton, BorderLayout.EAST);
         
@@ -41,15 +42,12 @@ public class IPFinder extends JFrame {
         
         resultArea = new JTextArea();
         resultArea.setEditable(false);
-        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        resultArea.setBackground(Color.BLACK);
-        resultArea.setForeground(Color.GREEN);
+        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollPane = new JScrollPane(resultArea);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Results"));
         
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         add(mainPanel);
         
@@ -64,8 +62,10 @@ public class IPFinder extends JFrame {
     private void getLocalIP() {
         try {
             InetAddress localhost = InetAddress.getLocalHost();
+            resultArea.append("========== LOCAL IP ==========\n");
             resultArea.append("Local IP Address: " + localhost.getHostAddress() + "\n");
-            resultArea.append("Host Name: " + localhost.getHostName() + "\n\n");
+            resultArea.append("Host Name: " + localhost.getHostName() + "\n");
+            resultArea.append("==============================\n\n");
         } catch (UnknownHostException e) {
             resultArea.append("Error: Could not find local IP\n\n");
         }
@@ -78,16 +78,36 @@ public class IPFinder extends JFrame {
                 URL url = new URL("https://api.ipify.org");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
                 String publicIP = reader.readLine();
-                resultArea.append("Public IP Address: " + publicIP + "\n\n");
+                SwingUtilities.invokeLater(() -> {
+                    resultArea.append("========== PUBLIC IP ==========\n");
+                    resultArea.append("Public IP Address: " + publicIP + "\n");
+                    resultArea.append("===============================\n\n");
+                });
                 reader.close();
             } catch (Exception e) {
-                resultArea.append("Error: Could not find public IP\n\n");
+                SwingUtilities.invokeLater(() -> 
+                    resultArea.append("Error: Could not find public IP\n\n")
+                );
             }
         }).start();
     }
     
     private void getWebsiteIP() {
-        JOptionPane.showMessageDialog(this,"Coming Sooon");
+        String website = urlField.getText().trim();
+        if (website.isEmpty()) {
+            resultArea.append("Please enter a website URL\n\n");
+            return;
+        }
+        try {
+            InetAddress address = InetAddress.getByName(website);
+            resultArea.append("========== WEBSITE IP ==========\n");
+            resultArea.append("Website: " + website + "\n");
+            resultArea.append("IP Address: " + address.getHostAddress() + "\n");
+            resultArea.append("===============================\n\n");
+            urlField.setText("");
+        } catch (UnknownHostException e) {
+            resultArea.append("Error: Could not find IP for " + website + "\n\n");
+        }
     }
     
     public static void main(String[] args) {
